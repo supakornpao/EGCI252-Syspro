@@ -16,6 +16,11 @@ struct range{
 
 void* compute_prime(void* arg){
 	int *primelist = malloc((max/N)*sizeof(int)); 
+	if(!primelist){
+		perror("Memory allocation failed");
+		pthread_exit(NULL);
+	}
+
 	struct range *n = (struct range*)arg;
 	unsigned long candidate;
 	n->count = 0;
@@ -36,8 +41,11 @@ void* compute_prime(void* arg){
 		candidate++;
 	}
 	primelist = realloc(primelist,(n->count+1)*sizeof(int));
+	if(!primelist){
+		perror("Memory reallocation failed");
+		pthread_exit(NULL);
+	}
 	primelist[n->count] = -1;//end of the list
-	free(n);
 	return primelist;
 }
 
@@ -46,18 +54,21 @@ int main(){
 	struct range *args[N];
 	int thread;
 	int *count[N];
-	unsigned long number_count = 50000;
-	//number of prime smaller than this amount
+
 	
 	unsigned long start = 0;
-	unsigned long end = start+number_count;
-	unsigned long number_per_thread = number_count/N;
+	unsigned long end = start+max;
+	unsigned long number_per_thread = max/N;
 	//number of prime per thread
 
-	assert(number_count % N == 0);
+	assert(max % N == 0);
 
 	for(thread = 0; thread<N;thread++){
 		args[thread] = malloc(sizeof(struct range));
+		if(!args[thread]){
+			perror("Memory allocation failed");
+			exit(EXIT_FAILURE);
+		}
 		args[thread]->start = start+(thread* number_per_thread);
 		args[thread]->end = args[thread]->start + number_per_thread - 1;
 		assert(pthread_create(&threads[thread],NULL,compute_prime,args[thread])==0);
@@ -66,8 +77,15 @@ int main(){
 	unsigned long total_number = 0;
 
 	for(thread = 0; thread<N;thread++){
-		pthread_join(threads[thread],NULL);
-		total_number += args[thread]->count;
+		void *result;
+		pthread_join(threads[thread],&result);
+		count[thread] = (int*)result;
+		int prime_count=0;
+		while(count[thread][prime_count]!=-1){
+			prime_count++;
+		}
+
+		total_number += prime_count;
 		free(args[thread]);
 	}
 
