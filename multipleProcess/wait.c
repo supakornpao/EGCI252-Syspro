@@ -12,7 +12,7 @@ int main(){
 	switch(pid){
 		case -1: _exit(1);
 		case 0: msg = "Child!\n";n=3; break;
-		default: msg = "Parent!\n"; n=15; break;
+		default: msg = "Parent!\n"; n=45; break;
 	}
 
 	for(;n>0;n--){puts(msg); sleep(1);}
