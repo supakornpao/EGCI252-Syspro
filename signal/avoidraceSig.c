@@ -11,10 +11,10 @@ static void sig_cld(int signo){
 	else if(signo==SIGUSR2)
 		printf("Parent\n");
 }
-pid_t pid;
+
 
 int main(){
-	char* msg,*omsg,c;
+	pid_t pid;
 	int n=0;
 	signal(SIGUSR1,sig_cld);
 	signal(SIGUSR2,sig_cld);
@@ -24,16 +24,17 @@ int main(){
 	switch(pid){
 		case -1: exit(1);
 		case 0:  for(n=0;n<5;n++){
-					
-					
+					pause();	
+					sleep(1);
 					kill(getppid(),SIGUSR1);
-				 } break;
+				 } 
+				 break;
 		default: for(n=0;n<5;n++){
-					
+					sleep(1);
 					kill(pid,SIGUSR2);
-					
-
-				} break;
+					pause();
+				 } 
+				 break;
 	}
 
 	return 0;
