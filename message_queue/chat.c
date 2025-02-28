@@ -46,6 +46,7 @@ int main(int argc, char *argv[])
 	if (strcmp(*argv, "1") == 0){
 		
 		child = fork();
+		printf("forked, child pid: %d\n",child);
 		switch (child){
 			case -1 : perror("Forking failed"); exit(EXIT_FAILURE);
 			case 0 : while (strncmp(rbuf, "end chat", 8)!=0){
@@ -63,7 +64,6 @@ int main(int argc, char *argv[])
 						printf("Enter a message: ");
 						fflush(stdout);
 						int msgID = msgget((key_t)1234,0666|IPC_CREAT);
-						int running = 1;
 						
 						read(0, buffer, MAX_RBUF);
 						amsg.msg_type = 0;
