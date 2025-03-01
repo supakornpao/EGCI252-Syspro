@@ -40,53 +40,49 @@ int main(int argc, char *argv[])
 		}
 	}
 ////////////////////////////////////////////////////
-	FIFO_FD1 = open(FIFO_1, O_WRONLY);
-	FIFO_FD2 = open(FIFO_2, O_RDONLY);
+	//FIFO_FD1 = open(FIFO_1, O_WRONLY);
+	//FIFO_FD2 = open(FIFO_2, O_RDONLY);
 	argv++;
 	if (strcmp(*argv, "1") == 0){
-		
+		FIFO_FD1 = open(FIFO_1, O_WRONLY);
+		FIFO_FD2 = open(FIFO_2, O_RDONLY);
 		child = fork();
-		printf("forked, child pid: %d\n",child);
 		switch (child){
 			case -1 : perror("Forking failed"); exit(EXIT_FAILURE);
-			case 0 : while (strncmp(rbuf, "end chat", 8)!=0){
-//////////////// Put your code here ////////////////						msgID = msgi
-
-						read(FIFO_FD2,rbuf, sizeof(rbuf));
-						write(1,rbuf,sizeof(rbuf));
-
+			case 0 : while (strncmp(rbuf, "end chat", 8)){
+						memset(rbuf, 0, MAX_RBUF);
+						nbytes = read(FIFO_FD2,rbuf,MAX_RBUF);
+						if(nbytes>0)
+							printf("%s\n",rbuf);
 					}
 					break;
 
-			default : while (strncmp(rbuf, "end chat", 8)!=0){
-						struct msg amsg;
-						char buffer[MAX_RBUF];
-						printf("Enter a message: ");
-						fflush(stdout);
-						int msgID = msgget((key_t)1234,0666|IPC_CREAT);
-						
-						read(0, buffer, MAX_RBUF);
-						amsg.msg_type = 0;
-						strcpy(amsg.data, buffer);
-						if(msgsnd(msgID,(void*)&amsg,MAX_RBUF,0)==-1)
-							printf("msg send fails");
-						
-//////////////// Put your code here ////////////////
-					}
-					break;
+			default : while (strncmp(rbuf, "end chat", 8)){
+									memset(rbuf, 0, MAX_RBUF);
+									fgets(rbuf,MAX_RBUF);
+									write(FIFO_FD1,rbuf,strlen(rbuf)+1);
+								}
+								break;
 		}
 	}
 	else if (strcmp(*argv, "2") == 0){
+		FIFO_FD1 = open(FIFO_1, O_RDONLY);
+		FIFO_FD2 = open(FIFO_2, O_WRONLY);
 		child = fork();
 		switch (child){
 		case -1 : perror("Forking failed"); exit(EXIT_FAILURE);
 		case 0 : while (strncmp(rbuf, "end chat", 8)){
-//////////////// Put your code here ////////////////
+								memset(rbuf, 0, MAX_RBUF);
+								nbytes = read(FIFO_FD1,rbuf,MAX_RBUF);
+								if(nbytes>0)
+									printf("%s\n",rbuf);
 				}
 				break;
 		default : while (strncmp(rbuf, "end chat", 8))
 				{
-//////////////// Put your code here ////////////////
+								memset(rbuf, 0, MAX_RBUF);
+								fgets(rbuf, MAX_RBUF,stdin);
+								write(FIFO_FD2,rbuf,strlen(rbuf)+1);
 				}
 		}
 	}
