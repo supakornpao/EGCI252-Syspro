@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
 			default : while (strncmp(rbuf, "end chat", 8)){
 									memset(rbuf, 0, MAX_RBUF);
-									fgets(rbuf,MAX_RBUF);
+									fgets(rbuf,MAX_RBUF,stdin);
 									write(FIFO_FD1,rbuf,strlen(rbuf)+1);
 								}
 								break;
