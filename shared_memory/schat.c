@@ -44,16 +44,16 @@ int main(int argc, char *argv[]){
       case -1: perror("Forking failed"); exit(EXIT_FAILURE);
       case 0: 
               while(strncmp(sh_area->data, "end chat", 8)){
-                while(sh_area->written!=0){
+                while(sh_area->written!=2){
                   sleep(1);
                 }
                 printf("%s\n",sh_area -> data);
                 sh_area->written = 0;
-                
+                sleep(1);
               }
               break;
       default:while(strncmp(sh_area->data, "end chat", 8)){
-                while (sh_area->written!=2) {
+                while (sh_area->written!=0) {
                   sleep(1);
                 }
                 printf("Enter data: ");
@@ -77,7 +77,7 @@ int main(int argc, char *argv[]){
                   }
                   printf("%s\n",sh_area -> data);
                   sh_area->written = 0;
-                  
+                  sleep(1);
                 }
                 break;
         default:while(strncmp(sh_area->data, "end chat", 8)){
