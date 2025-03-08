@@ -47,20 +47,28 @@ int main(int argc, char *argv[]){
                 while(sh_area->written!=2){
                   sleep(1);
                 }
-                printf("%s\n",sh_area -> data);
+                if(strncmp(sh_area->data, "end chat", 8)!=0)printf(">> %s",sh_area -> data);
                 sh_area->written = 0;
                 sleep(1);
+              }
+              if (strncmp(sh_area->data, "end chat", 8) == 0) {
+                //printf("user 1 removes data\n");
+                if (shmctl(shmid, IPC_RMID, 0) == -1) {
+                  fprintf(stderr, "shmctl failed\n");
+                  exit(EXIT_FAILURE);
+                }
               }
               break;
       default:while(strncmp(sh_area->data, "end chat", 8)){
                 while (sh_area->written!=0) {
                   sleep(1);
                 }
-                printf("Enter data: ");
+                
                 fgets(buffer, BUFSIZ, stdin);
                 strcpy(sh_area->data, buffer);
                 sh_area->written = 1;
               }
+              
               break;
     }
   }
@@ -75,21 +83,31 @@ int main(int argc, char *argv[]){
                   while(sh_area->written!=1){
                     sleep(1);
                   }
-                  printf("%s\n",sh_area -> data);
+                  if(strncmp(sh_area->data, "end chat", 8)!=0)printf(">> %s",sh_area -> data);
                   sh_area->written = 0;
                   sleep(1);
+                }
+                if (strncmp(sh_area->data, "end chat", 8) == 0) {
+                  //printf("user 2 detached\n");
+                  if (shmdt(sh_mem) == -1) {
+                    fprintf(stderr, "shmdt failed\n");
+                    exit(EXIT_FAILURE);
+                  }
                 }
                 break;
         default:while(strncmp(sh_area->data, "end chat", 8)){
                   while (sh_area->written!=0) {
                     sleep(1);
                   }
-                  printf("Enter data: ");
+                  
                   fgets(buffer, BUFSIZ, stdin);
                   strcpy(sh_area->data, buffer);
                   sh_area->written = 2;
                 }
+                
                 break;
       }
     }
+  
+  
 }
