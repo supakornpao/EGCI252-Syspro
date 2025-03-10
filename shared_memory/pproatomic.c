@@ -30,8 +30,7 @@ int main() {
   sh_area = (struct shm_st *)sh_mem;
   atomic_store(&sh_area->written, 0);
   while (running) {
-    while (atomic_load(&sh_area->written))
-      ;
+    while (atomic_load(&sh_area->written));
     printf("Enter data : ");
     fgets(buffer, BUFSIZ, stdin);
     strcpy(sh_area->data, buffer);
