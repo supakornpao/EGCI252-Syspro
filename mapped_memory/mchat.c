@@ -16,10 +16,17 @@ struct file_memory {
   char text[FILE_LENGTH-sizeof(int)];
 };
 
+pid_t other_user_pid = -1;
+
+void sighandler(int signal){
+  if(signal == SIGUSR1) printf("User 1 terminated\n");
+  else if(signal == SIGUSR2) printf("User 2 terminated\n");
+  exit(EXIT_SUCCESS);
+}
+
 int main(int argc, char *argv[]){
   int user = atoi(argv[1]);
-  int fd;
-
+  int fd, mypid = getpid();
   char buffer[BUFSIZ];
 
   fd = open(FILE_NAME, O_RDWR|O_CREAT, S_IRUSR | S_IWUSR);
@@ -57,10 +64,10 @@ int main(int argc, char *argv[]){
                 file_memory->written = 0;
                 sleep(1);
               }
-              
+
               munmap(file_memory, FILE_LENGTH);
               exit(0);
-              
+
       default:while(strncmp(buffer, "end chat", 8)){
                 while(file_memory->written!=0)
                     sleep(1);
@@ -69,7 +76,6 @@ int main(int argc, char *argv[]){
                 file_memory->text[sizeof(file_memory->text) - 1] = '\0';
                 file_memory->written = 1;
               }
-              wait(NULL);
               munmap(file_memory, FILE_LENGTH);
               close(fd);
               break;
@@ -84,7 +90,7 @@ int main(int argc, char *argv[]){
         perror("Forking failed");
         exit(EXIT_FAILURE);
       case 0: while(strncmp(buffer, "end chat", 8)){
-                
+
                 while(file_memory->written!=1)
                   sleep(1);
                 strncpy(buffer, file_memory->text, sizeof(buffer) - 1);
@@ -95,7 +101,7 @@ int main(int argc, char *argv[]){
               }
               munmap(file_memory, FILE_LENGTH);
               exit(0);
-              
+
       default:while(strncmp(buffer, "end chat", 8)){
                 while(file_memory->written!=0)
                   sleep(1);
@@ -104,11 +110,10 @@ int main(int argc, char *argv[]){
                 file_memory->text[sizeof(file_memory->text) - 1] = '\0';
                 file_memory->written = 2;
               }
-              wait(NULL);
               munmap(file_memory, FILE_LENGTH);
               close(fd);
               break;
     }
   }
-  
+
 }
