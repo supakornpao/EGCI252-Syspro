@@ -11,9 +11,13 @@
 #define FILE_LENGTH 0x100
 #define FILE_NAME "/tmp/chat-log"
 
+struct file_memory {
+  volatile int written;
+  char text[FILE_LENGTH-sizeof(int)];
+};
+
 int main(int argc, char *argv[]){
   int user = atoi(argv[1]);
-  void *file_memory;
   int fd;
 
   char buffer[BUFSIZ];
@@ -23,18 +27,22 @@ int main(int argc, char *argv[]){
       perror("File open failed");
       exit(EXIT_FAILURE);
   }
+  if(read(fd,buffer,sizeof(buffer)>0)){
+    system("echo "" > /tmp/chat-log"); //clear previous chat log
+  }
   if (ftruncate(fd, FILE_LENGTH) == -1) {
       perror("ftruncate failed");
       exit(EXIT_FAILURE);
   }
-  file_memory = mmap(0, FILE_LENGTH, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  struct file_memory * file_memory = mmap(0, FILE_LENGTH, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (file_memory == MAP_FAILED) {
       perror("mmap failed");
       exit(EXIT_FAILURE);
   }
-  close(fd);
+  
 
   if(user == 1){
+    file_memory->written = 0;
     pid_t pid;
     pid = fork();
     switch(pid){
@@ -42,22 +50,29 @@ int main(int argc, char *argv[]){
         perror("Forking failed");
         exit(EXIT_FAILURE);
       case 0: while(strncmp(buffer, "end chat", 8)){
-                if (strlen((char *)file_memory) > 0) {
-                  sscanf(file_memory, "%255s", buffer);
-                }
-                printf("%s\n", buffer);
+                while(file_memory->written!=2)
+                    sleep(1);
+                strncpy(buffer, file_memory->text, sizeof(buffer) - 1);
+                buffer[sizeof(buffer)-1] = '\0';
+                printf(">> %s", buffer);
+                file_memory->written = 0;
                 sleep(1);
               }
+              
               munmap(file_memory, FILE_LENGTH);
+              exit(0);
               break;
       default:while(strncmp(buffer, "end chat", 8)){
+                while(file_memory->written!=0)
+                    sleep(1);
                 fgets(buffer, BUFSIZ, stdin);
-                lseek(fd, FILE_LENGTH + 1, SEEK_SET); 
-                write(fd, "", 1);
-                //lseek(fd, 0, SEEK_SET);
-                snprintf((char *)file_memory, FILE_LENGTH, "%s", buffer);
+                strncpy(file_memory->text, buffer, sizeof(file_memory->text) - 1);
+                file_memory->text[sizeof(file_memory->text) - 1] = '\0';
+                file_memory->written = 1;
               }
+              wait(NULL);
               munmap(file_memory, FILE_LENGTH);
+              close(fd);
               break;
     }
   }
@@ -70,22 +85,29 @@ int main(int argc, char *argv[]){
         perror("Forking failed");
         exit(EXIT_FAILURE);
       case 0: while(strncmp(buffer, "end chat", 8)){
-                if (strlen((char *)file_memory) > 0) {
-                  sscanf((char *)file_memory, "%255s", buffer);
-                }
-                printf("%s\n", buffer);
+                
+                while(file_memory->written!=1)
+                  sleep(1);
+                strncpy(buffer, file_memory->text, sizeof(buffer) - 1);
+                buffer[sizeof(buffer)-1] = '\0';
+                printf(">> %s", buffer);
+                file_memory->written = 0;
                 sleep(1);
               }
+              exit(0);
               munmap(file_memory, FILE_LENGTH);
               break;
       default:while(strncmp(buffer, "end chat", 8)){
+                while(file_memory->written!=0)
+                  sleep(1);
                 fgets(buffer, BUFSIZ, stdin);
-                lseek(fd, FILE_LENGTH + 1, SEEK_SET); 
-                write(fd, "", 1);
-                //lseek(fd, 0, SEEK_SET);
-                snprintf((char *)file_memory, FILE_LENGTH, "%s", buffer);
+                strncpy(file_memory->text, buffer, sizeof(file_memory->text) - 1);
+                file_memory->text[sizeof(file_memory->text) - 1] = '\0';
+                file_memory->written = 2;
               }
+              wait(NULL);
               munmap(file_memory, FILE_LENGTH);
+              close(fd);
               break;
     }
   }
