@@ -39,10 +39,9 @@ int main(int argc, char *argv[]){
       perror("mmap failed");
       exit(EXIT_FAILURE);
   }
-  
+  file_memory->written = 0;
 
   if(user == 1){
-    file_memory->written = 0;
     pid_t pid;
     pid = fork();
     switch(pid){
@@ -61,7 +60,7 @@ int main(int argc, char *argv[]){
               
               munmap(file_memory, FILE_LENGTH);
               exit(0);
-              break;
+              
       default:while(strncmp(buffer, "end chat", 8)){
                 while(file_memory->written!=0)
                     sleep(1);
@@ -94,9 +93,9 @@ int main(int argc, char *argv[]){
                 file_memory->written = 0;
                 sleep(1);
               }
-              exit(0);
               munmap(file_memory, FILE_LENGTH);
-              break;
+              exit(0);
+              
       default:while(strncmp(buffer, "end chat", 8)){
                 while(file_memory->written!=0)
                   sleep(1);
