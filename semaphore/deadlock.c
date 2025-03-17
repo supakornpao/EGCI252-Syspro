@@ -24,14 +24,12 @@ void f2(pid_t);
 void f1(pid_t pid){
   semaphore_p();
   if(pid) f2(pid);
-  printf("Done\n");
   semaphore_v();
 }
 
 void f2(pid_t pid){
   semaphore_p();
   if(!pid) f1(pid);
-  printf("Done\n");
   semaphore_v();
 }
 
@@ -46,6 +44,8 @@ int main(int argc, char *argv[]){
   else if(pid>0){
     f1(pid);
   }
+  printf("Done!\n");
+  
 }
 
 static int set_semvalue(void) {
