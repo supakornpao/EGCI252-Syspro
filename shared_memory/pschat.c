@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 #define SHM_NAME "/pshm"
 #define MEM_SIZE 64
@@ -15,14 +16,24 @@ struct shm_st {
   char data[MEM_SIZE];
 };
 
+void *sh_mem = NULL;
+int st_size = sizeof(struct shm_st);
+
+void sighandler(int signal) {
+  if(signal==SIGTERM){
+    munmap(sh_mem, st_size);
+    exit(EXIT_SUCCESS);
+  }
+}
+
 int main(int argc, char* argv[]){
   
-  int shmfd, st_size;
+  int shmfd;
   int user = atoi(argv[1]);
   struct shm_st *sh_area;
-  void *sh_mem = NULL;
+
   char buffer[BUFSIZ];
-  st_size = sizeof(struct shm_st);
+
   shmfd = shm_open(SHM_NAME, O_CREAT | O_RDWR, 0660);
   if (shmfd == -1) {
     perror("shm_open failed ");
@@ -37,6 +48,7 @@ int main(int argc, char* argv[]){
   if(user == 1){
     pid_t pid;
     pid = fork();
+    signal(SIGTERM,sighandler);
     switch(pid){
       case -1: 
       case 0: while(strncmp(sh_area->data, "end chat", 8)){
@@ -45,12 +57,14 @@ int main(int argc, char* argv[]){
                   atomic_store(&sh_area->written, 0);
                 }
               }
-              munmap(sh_mem, st_size);
+              //munmap(sh_mem, st_size);
               close(shmfd);
               if (shm_unlink(SHM_NAME) == -1) {
                 perror("shm_unlink failed ");
                 exit(EXIT_FAILURE);
               }
+              kill(getppid(),SIGTERM);
+              raise(SIGTERM);
               break;
       default:while(strncmp(sh_area->data, "end chat", 8)){
                 while (atomic_load(&sh_area->written))
@@ -59,12 +73,15 @@ int main(int argc, char* argv[]){
                 strcpy(sh_area->data, buffer);
                 atomic_store(&sh_area->written, 1);
               }
+              kill(pid,SIGTERM);
+              raise(SIGTERM);
               break;
     }
   }
   else if(user == 2){
     pid_t pid;
     pid = fork();
+    signal(SIGTERM,sighandler);
     switch(pid){
       case -1: 
       case 0: while(strncmp(sh_area->data, "end chat", 8)){
@@ -73,8 +90,10 @@ int main(int argc, char* argv[]){
                   atomic_store(&sh_area->written, 0);
                 }
               }
-              munmap(sh_mem, st_size);
+              //munmap(sh_mem, st_size);
               close(shmfd);
+              kill(getppid(), SIGTERM);
+              raise(SIGTERM);
               break;
       default:while(strncmp(sh_area->data, "end chat", 8)){
                 while (atomic_load(&sh_area->written))
@@ -83,6 +102,8 @@ int main(int argc, char* argv[]){
                 strcpy(sh_area->data, buffer);
                 atomic_store(&sh_area->written, 2);
               }
+              kill(pid, SIGTERM);
+              raise(SIGTERM);
               break;
     }
   }
