@@ -74,7 +74,7 @@ int main(int argc, char *argv[]){
                 strcpy(sh_area->data, buffer);
                 sh_area->written = 1;
               }
-              kill(getppid(),SIGTERM);
+              kill(child,SIGTERM);
               raise(SIGTERM);
               break;
     }
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]){
                   strcpy(sh_area->data, buffer);
                   sh_area->written = 2;
                 }
-                kill(getppid(),SIGTERM);
+                kill(child,SIGTERM);
                 raise(SIGTERM);
                 break;
       }
