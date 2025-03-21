@@ -17,6 +17,7 @@ struct shm_st{
 void sighandler(int signal){
   if(signal == SIGTERM)
     exit(EXIT_SUCCESS);
+  
 }
 
 int main(int argc, char *argv[]){
@@ -74,7 +75,7 @@ int main(int argc, char *argv[]){
                 strcpy(sh_area->data, buffer);
                 sh_area->written = 1;
               }
-              kill(child,SIGTERM);
+              kill(getppid(),SIGTERM);
               raise(SIGTERM);
               break;
     }
@@ -110,7 +111,7 @@ int main(int argc, char *argv[]){
                   strcpy(sh_area->data, buffer);
                   sh_area->written = 2;
                 }
-                kill(child,SIGTERM);
+                kill(getppid(),SIGTERM);
                 raise(SIGTERM);
                 break;
       }
