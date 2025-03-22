@@ -41,7 +41,7 @@ int main(int argc, char *argv[]){
       exit(EXIT_FAILURE);
   }
   if(read(fd,buffer,sizeof(buffer)>0)){
-    system("echo "" > /tmp/chat-log"); //clear previous chat log
+    system("echo "" > /tmp/chat-log"); 
   }
   if (ftruncate(fd, FILE_LENGTH) == -1) {
       perror("ftruncate failed");
