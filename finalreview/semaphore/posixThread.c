@@ -18,11 +18,14 @@ struct args{
 
 void* func(void* parameter){
     struct args* p = (struct args*)parameter;
-    sem_wait(p->sem);
+    
     for(int i=0;i<p->count;i++){
+        sem_wait(p->sem);
         printf("%s",p->C);
+        sem_post(p->sem);
+        usleep(1000);
     }
-    sem_post(p->sem);
+    
     printf("\n");
     
     return NULL;
